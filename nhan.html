@@ -38,6 +38,7 @@
   .row b { font-weight: 800; }
   .val { white-space: pre-wrap; word-break: break-word; }
   .big { font-size: 13pt; font-weight: 600; }
+  .val.small { font-size: 9.5pt; font-weight: 400; line-height: 1.3; }
   .addr { font-size: 12pt; text-transform: uppercase; }
   .box { border: 3px double #111; margin-top: auto; padding: 2mm; text-align: center; min-height: 26mm; display: flex; flex-direction: column; justify-content: center; }
   .box .tt { font-size: 22pt; font-weight: 800; line-height: 1.1; }
@@ -130,33 +131,32 @@
     addRow(note ? `${name.trim()} (${note})` : name.trim(), q);
     count++;
   });
-  // Đơn cũ chưa có dòng chi tiết: mỗi dòng của "Nội dung đơn hàng" thành một dòng trong bảng,
-  // và lấy các số "…kg" ghi trong nội dung làm Tổng cộng.
-  let ndKg = 0;
-  if (!count) {
-    const lines = g("nd").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-    lines.forEach(l => addRow(l, ""));
-    count = lines.length;
-    for (const m of g("nd").matchAll(/(\d+(?:[.,]\d+)?)\s*(?:kg|kí|ký|ki)(?!\p{L})/giu)) ndKg += Number(m[1].replace(",", "."));
-  }
+  // Đơn chưa có dòng chi tiết: KHÔNG đoán sản phẩm/kg từ chữ. Để trống dòng kẻ cho ghi tay,
+  // còn "Nội dung đơn hàng" in nguyên văn ở Ghi chú.
+  const coDong = count > 0;
   if (count > 7) document.getElementById("tbl").classList.add("many");
-  for (let k = count; k < 7; k++) addRow("", "");
+  for (let k = count; k < (coDong ? 7 : 3); k++) addRow("", "");
 
-  // Tổng cộng (kg): cộng Trọng lượng các dòng; không có thì Trọng lượng của phiếu,
-  // rồi số kg trong nội dung (đơn cũ), cuối cùng tổng số lượng.
-  const kg = Math.round((kgSum || num(g("tl")) || ndKg || total) * 100) / 100;
+  // Tổng cộng (kg): chỉ lấy từ số liệu thật: Trọng lượng các dòng, rồi Trọng lượng của phiếu,
+  // rồi tổng số lượng các dòng (số lượng tính theo kg như mẫu cũ). Không có thì để trống.
+  const kg = Math.round((kgSum || num(g("tl")) || (coDong ? total : 0)) * 100) / 100;
   set("tong", kg ? kg.toLocaleString("vi-VN") + " kg" : "");
 
-  // Ghi chú: "Hẹn gửi ngày dd/mm/yy, <ghi chú>".
+  // Ghi chú: "Hẹn gửi ngày dd/mm/yy, <ghi chú giao>" + nội dung đơn (đơn chưa có dòng chi tiết).
   const hg = g("hg") || g("hx");
-  set("gc", [hg ? "Hẹn gửi ngày " + hg : "", g("gg") || g("gc")].filter(Boolean).join(", "));
+  const gcLine = [hg ? "Hẹn gửi ngày " + hg : "", g("gg") || g("gc")].filter(Boolean).join(", ");
+  const nd = coDong ? "" : g("nd");
+  set("gc", [gcLine, nd].filter(Boolean).join("\n"));
+  if (nd) document.getElementById("gc").classList.add("small");
 
   // Ô thanh toán: tên trạng thái + số tiền cần thu.
   const tt = g("tt");
   const can = Math.max(0, num(g("tien")) - num(g("coc")));
   const thu = /thu hộ|cần thu/i.test(tt);
   set("tt", thu ? "Thu hộ" : tt);
-  if (tt) set("st", fmt(thu ? can : 0));
+  // Thu hộ: chỉ in số khi đơn có số tiền thật; chưa có thì để chỗ trống ghi tay, KHÔNG in 0 đ.
+  if (thu) set("st", can > 0 ? fmt(can) : "………………… đ");
+  else if (/đã thanh toán/i.test(tt)) set("st", fmt(0));
 
   // Tiền xe + chành xe.
   const tc = g("tc");
