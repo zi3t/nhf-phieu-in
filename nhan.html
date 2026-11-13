@@ -26,18 +26,26 @@
   .title { text-align: center; font-size: 17pt; font-weight: 800; margin: 1.5mm 0 2mm; }
   .cols { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; }
   .left { padding-right: 4mm; border-right: 1.5px solid #111; display: flex; flex-direction: column; min-height: 0; }
-  .right { padding-left: 4mm; display: flex; flex-direction: column; }
+  .right { padding-left: 4mm; display: flex; flex-direction: column; min-height: 0; }
   table { width: 100%; border-collapse: collapse; }
   th { text-align: left; font-weight: 800; padding: 1mm 0; border-bottom: 1.5px solid #111; }
   th:last-child, td:last-child { text-align: right; width: 18mm; }
-  td { padding: 1.4mm 0; border-bottom: 1px solid #111; font-variant-numeric: tabular-nums; vertical-align: top; }
-  .many td { padding: .6mm 0; font-size: 8.5pt; }
+  td { height: 7mm; padding: 0; border-bottom: 1px solid #111; font-variant-numeric: tabular-nums; vertical-align: middle; text-transform: uppercase; }
+  .many td { height: 5mm; font-size: 8.5pt; }
   .nd { white-space: pre-wrap; padding-top: 1.5mm; }
   .grow { flex: 1; }
-  .row { margin: 1.2mm 0; display: grid; grid-template-columns: 24mm 1fr; }
+  .row { margin: 1.2mm 0; display: grid; grid-template-columns: 24mm 1fr; align-items: baseline; }
   .row b { font-weight: 800; }
   .val { white-space: pre-wrap; word-break: break-word; }
-  .box { border: 3px double #111; flex: 1; max-height: 34mm; margin-top: 3mm; }
+  .big { font-size: 13pt; font-weight: 600; }
+  .addr { font-size: 12pt; text-transform: uppercase; }
+  .box { border: 3px double #111; margin-top: auto; padding: 2mm; text-align: center; min-height: 26mm; display: flex; flex-direction: column; justify-content: center; }
+  .box .tt { font-size: 22pt; font-weight: 800; line-height: 1.1; }
+  .box .st { font-size: 14pt; font-weight: 800; margin-top: 1mm; }
+  .cuoc { font-weight: 600; font-size: 11pt; margin: 2mm 0 1mm; min-height: 5mm; }
+  .xe { font-size: 16pt; font-weight: 800; min-height: 8mm; }
+  .xe span { text-transform: uppercase; }
+  .code { text-align: right; font-size: 8pt; letter-spacing: .3px; margin-top: 1mm; }
   .empty { padding: 30mm 0; text-align: center; color: #a00; }
   @media print {
     html, body { background: #fff; }
@@ -68,48 +76,85 @@
       </table>
       <div class="nd" id="nd"></div>
       <div class="grow"></div>
-      <div class="row"><b>Tổng cộng:</b> <span class="val" id="tong"></span></div>
-      <div class="row"><b>Ghi chú:</b> <span class="val" id="gc"></span></div>
+      <div class="row"><b>Tổng cộng:</b> <span class="val big" id="tong"></span></div>
+      <div class="row"><b>Ghi chú:</b> <span class="val big" id="gc"></span></div>
       <div class="row"><b>Ngày lập:</b> <span class="val" id="nl"></span></div>
     </div>
     <div class="right">
-      <div class="row"><b>Người nhận:</b> <span class="val" id="nn"></span></div>
-      <div class="row"><b>Điện thoại:</b> <span class="val" id="dt"></span></div>
-      <div class="row"><b>Địa chỉ:</b> <span class="val" id="dc"></span></div>
-      <div class="box"></div>
+      <div class="row"><b>Người nhận:</b> <span class="val big" id="nn"></span></div>
+      <div class="row"><b>Điện thoại:</b> <span class="val big" id="dt"></span></div>
+      <div class="row"><b>Địa chỉ:</b> <span class="val addr" id="dc"></span></div>
+      <div class="box"><div class="tt" id="tt"></div><div class="st" id="st"></div></div>
+      <div class="cuoc" id="cuoc"></div>
+      <div class="xe" id="xe"></div>
+      <div class="code" id="code"></div>
     </div>
   </section>
 </main>
 <script>
   // Dữ liệu đến từ phần sau dấu # của link (Lark formula ENCODEURL), không gửi lên server nào.
   const p = new URLSearchParams(location.hash.slice(1));
+  const g = k => (p.get(k) || "").trim();
   const set = (id, v) => { document.getElementById(id).textContent = v || ""; };
-  ["ma", "nn", "dt", "dc", "gc", "nl"].forEach(k => set(k, p.get(k)));
-  const ma = p.get("ma") || "";
+  ["ma", "nn", "dt", "dc", "nl"].forEach(k => set(k, g(k)));
+  const ma = g("ma");
   if (ma) {
     document.title = "Nhãn " + ma;
+    set("code", ma);
     try {
       const qr = qrcode(0, "M"); qr.addData(ma); qr.make();
       document.getElementById("qr").src = qr.createDataURL(8, 0);
     } catch (e) { console.error("QR", e); }
   }
+  const num = v => { const n = Number(String(v || "").replace(/[^0-9.-]/g, "")); return Number.isFinite(n) ? n : 0; };
+  const fmt = n => n.toLocaleString("vi-VN") + " đ";
+
+  // Bảng sản phẩm, luôn đủ 7 dòng kẻ như mẫu cũ.
   const tbody = document.getElementById("items");
   let total = 0, count = 0;
-  (p.get("sp") || "").split("|").map(s => s.trim()).filter(Boolean).forEach(line => {
-    const i = line.lastIndexOf("~");
-    const name = i >= 0 ? line.slice(0, i) : line;
-    const qty = i >= 0 ? line.slice(i + 1) : "";
-    const n = Number(qty);
-    if (qty !== "" && Number.isFinite(n)) total += n;
+  const addRow = (name, qty) => {
     const tr = document.createElement("tr");
     const a = document.createElement("td"); a.textContent = name;
     const b = document.createElement("td"); b.textContent = qty;
-    tr.append(a, b); tbody.append(tr); count++;
+    tr.append(a, b); tbody.append(tr);
+  };
+  g("sp").split("|").map(s => s.trim()).filter(Boolean).forEach(line => {
+    const i = line.lastIndexOf("~");
+    const name = i >= 0 ? line.slice(0, i) : line;
+    const qty = i >= 0 ? line.slice(i + 1).trim() : "";
+    if (qty !== "" && Number.isFinite(Number(qty))) total += Number(qty);
+    addRow(name, qty); count++;
   });
   if (count > 7) document.getElementById("tbl").classList.add("many");
   // Đơn chưa có dòng chi tiết: in "Nội dung đơn hàng" thay cho bảng sản phẩm.
-  if (!count) set("nd", p.get("nd"));
-  set("tong", total ? String(total) : "");
+  if (!count) set("nd", g("nd"));
+  else for (let k = count; k < 7; k++) addRow("", "");
+
+  // Tổng cộng: ưu tiên cột Trọng lượng, không có thì cộng số lượng.
+  const tl = num(g("tl"));
+  const kg = tl || total;
+  set("tong", kg ? kg.toLocaleString("vi-VN") + " kg" : "");
+
+  // Ghi chú: "Hẹn gửi ngày dd/mm/yy, <ghi chú>".
+  const hg = g("hg") || g("hx");
+  set("gc", [hg ? "Hẹn gửi ngày " + hg : "", g("gc")].filter(Boolean).join(", "));
+
+  // Ô thanh toán: tên trạng thái + số tiền cần thu.
+  const tt = g("tt");
+  const can = Math.max(0, num(g("tien")) - num(g("coc")));
+  const thu = /thu hộ|cần thu/i.test(tt);
+  set("tt", thu ? "Thu hộ" : tt);
+  if (tt) set("st", fmt(thu ? can : 0));
+
+  // Tiền xe + chành xe.
+  const tc = g("tc");
+  set("cuoc", /shop/i.test(tc) ? "Tiền xe shop trả" : /khách/i.test(tc) ? "Tiền xe khách trả" : tc);
+  const cx = g("cx");
+  const xe = document.getElementById("xe");
+  if (cx && !/khách đến lấy|tự vận chuyển/i.test(cx)) {
+    const s = document.createElement("span"); s.textContent = cx;
+    xe.append("Gửi xe ", s);
+  } else set("xe", cx);
   if (!ma) document.getElementById("sheet").innerHTML = '<div class="empty">Không có dữ liệu đơn. Mở trang này từ nút “In đơn hàng” trong Lark Base.</div>';
   document.getElementById("print").addEventListener("click", () => window.print());
   if (p.get("auto") === "1") window.addEventListener("load", () => setTimeout(() => window.print(), 400));
