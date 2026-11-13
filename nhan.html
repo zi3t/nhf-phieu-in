@@ -30,7 +30,7 @@
   table { width: 100%; border-collapse: collapse; }
   th { text-align: left; font-weight: 800; padding: 1mm 0; border-bottom: 1.5px solid #111; }
   th:last-child, td:last-child { text-align: right; width: 18mm; }
-  td { height: 7mm; padding: 0; border-bottom: 1px solid #111; font-variant-numeric: tabular-nums; vertical-align: middle; text-transform: uppercase; }
+  td { height: 7mm; padding: 0 1mm 0 0; border-bottom: 1px solid #111; font-variant-numeric: tabular-nums; vertical-align: middle; }
   .many td { height: 5mm; font-size: 8.5pt; }
   .nd { white-space: pre-wrap; padding-top: 1.5mm; }
   .grow { flex: 1; }
@@ -119,21 +119,24 @@
     const b = document.createElement("td"); b.textContent = qty;
     tr.append(a, b); tbody.append(tr);
   };
+  // Mỗi dòng: Tên~Số lượng~Trọng lượng(kg)~Ghi chú dòng (bản cũ chỉ có Tên~Số lượng).
+  let kgSum = 0;
   g("sp").split("|").map(s => s.trim()).filter(Boolean).forEach(line => {
-    const i = line.lastIndexOf("~");
-    const name = i >= 0 ? line.slice(0, i) : line;
-    const qty = i >= 0 ? line.slice(i + 1).trim() : "";
-    if (qty !== "" && Number.isFinite(Number(qty))) total += Number(qty);
-    addRow(name, qty); count++;
+    const [name, qty = "", kg = "", ...rest] = line.split("~");
+    const note = rest.join("~").trim();
+    const q = qty.trim();
+    if (q !== "" && Number.isFinite(Number(q))) total += Number(q);
+    kgSum += num(kg);
+    addRow(note ? `${name.trim()} (${note})` : name.trim(), q);
+    count++;
   });
   if (count > 7) document.getElementById("tbl").classList.add("many");
   // Đơn chưa có dòng chi tiết: in "Nội dung đơn hàng" thay cho bảng sản phẩm.
   if (!count) set("nd", g("nd"));
   else for (let k = count; k < 7; k++) addRow("", "");
 
-  // Tổng cộng: ưu tiên cột Trọng lượng, không có thì cộng số lượng.
-  const tl = num(g("tl"));
-  const kg = tl || total;
+  // Tổng cộng (kg): cộng Trọng lượng các dòng; không có thì lấy Trọng lượng của phiếu, rồi mới tới tổng số lượng.
+  const kg = Math.round((kgSum || num(g("tl")) || total) * 100) / 100;
   set("tong", kg ? kg.toLocaleString("vi-VN") + " kg" : "");
 
   // Ghi chú: "Hẹn gửi ngày dd/mm/yy, <ghi chú>".
