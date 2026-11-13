@@ -96,7 +96,8 @@
   const p = new URLSearchParams(location.hash.slice(1));
   const g = k => (p.get(k) || "").trim();
   const set = (id, v) => { document.getElementById(id).textContent = v || ""; };
-  ["ma", "nn", "dt", "dc", "nl"].forEach(k => set(k, g(k)));
+  ["ma", "nn", "dt", "dc"].forEach(k => set(k, g(k)));
+  set("nl", g("nlt") || g("nl"));
   const ma = g("ma");
   if (ma) {
     document.title = "Nhãn " + ma;
@@ -137,7 +138,7 @@
 
   // Ghi chú: "Hẹn gửi ngày dd/mm/yy, <ghi chú>".
   const hg = g("hg") || g("hx");
-  set("gc", [hg ? "Hẹn gửi ngày " + hg : "", g("gc")].filter(Boolean).join(", "));
+  set("gc", [hg ? "Hẹn gửi ngày " + hg : "", g("gg") || g("gc")].filter(Boolean).join(", "));
 
   // Ô thanh toán: tên trạng thái + số tiền cần thu.
   const tt = g("tt");
