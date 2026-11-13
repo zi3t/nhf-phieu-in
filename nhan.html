@@ -130,13 +130,21 @@
     addRow(note ? `${name.trim()} (${note})` : name.trim(), q);
     count++;
   });
+  // Đơn cũ chưa có dòng chi tiết: mỗi dòng của "Nội dung đơn hàng" thành một dòng trong bảng,
+  // và lấy các số "…kg" ghi trong nội dung làm Tổng cộng.
+  let ndKg = 0;
+  if (!count) {
+    const lines = g("nd").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    lines.forEach(l => addRow(l, ""));
+    count = lines.length;
+    for (const m of g("nd").matchAll(/(\d+(?:[.,]\d+)?)\s*(?:kg|kí|ký|ki)(?!\p{L})/giu)) ndKg += Number(m[1].replace(",", "."));
+  }
   if (count > 7) document.getElementById("tbl").classList.add("many");
-  // Đơn chưa có dòng chi tiết: in "Nội dung đơn hàng" thay cho bảng sản phẩm.
-  if (!count) set("nd", g("nd"));
-  else for (let k = count; k < 7; k++) addRow("", "");
+  for (let k = count; k < 7; k++) addRow("", "");
 
-  // Tổng cộng (kg): cộng Trọng lượng các dòng; không có thì lấy Trọng lượng của phiếu, rồi mới tới tổng số lượng.
-  const kg = Math.round((kgSum || num(g("tl")) || total) * 100) / 100;
+  // Tổng cộng (kg): cộng Trọng lượng các dòng; không có thì Trọng lượng của phiếu,
+  // rồi số kg trong nội dung (đơn cũ), cuối cùng tổng số lượng.
+  const kg = Math.round((kgSum || num(g("tl")) || ndKg || total) * 100) / 100;
   set("tong", kg ? kg.toLocaleString("vi-VN") + " kg" : "");
 
   // Ghi chú: "Hẹn gửi ngày dd/mm/yy, <ghi chú>".
