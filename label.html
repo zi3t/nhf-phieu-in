@@ -154,7 +154,8 @@
   // Công nợ -> ĐÃ THANH TOÁN (nhà xe không thu).
   const tt = g("tt");
   const cx = g("cx");
-  const tuLay = /khách đến lấy|tự vận chuyển/i.test(cx);
+  // "Khách đến lấy", "KHÁCH GHÉ LẤY", "Lấy tại lò", "Tự vận chuyển"... đều là không gửi nhà xe.
+  const tuLay = /lấy|tự vận chuyển|tự giao/i.test(cx);
   const can = Math.max(0, num(g("tien")) - num(g("coc")));
   const thu = /thu hộ|cần thu/i.test(tt);
   const daTra = /đã thanh toán|công nợ/i.test(tt);
@@ -167,7 +168,7 @@
   const tc = g("tc");
   set("cuoc", /shop/i.test(tc) ? "Tiền xe shop trả" : /khách/i.test(tc) ? "Tiền xe khách trả" : tc);
   const xe = document.getElementById("xe");
-  if (cx && !/khách đến lấy|tự vận chuyển/i.test(cx)) {
+  if (cx && !tuLay) {
     const s = document.createElement("span"); s.textContent = cx;
     xe.append("Gửi xe ", s);
   } else set("xe", cx);
