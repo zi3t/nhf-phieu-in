@@ -41,7 +41,8 @@
   .val.small { font-size: 9.5pt; font-weight: 400; line-height: 1.3; }
   .addr { font-size: 12pt; text-transform: uppercase; }
   .box { border: 3px double #111; margin-top: auto; padding: 2mm; text-align: center; min-height: 26mm; display: flex; flex-direction: column; justify-content: center; }
-  .box .tt { font-size: 22pt; font-weight: 800; line-height: 1.1; }
+  .box .tt { font-size: 22pt; font-weight: 800; line-height: 1.1; text-transform: uppercase; }
+  #nn { text-transform: uppercase; }
   .box .st { font-size: 14pt; font-weight: 800; margin-top: 1mm; }
   .cuoc { font-weight: 600; font-size: 11pt; margin: 2mm 0 1mm; min-height: 5mm; }
   .xe { font-size: 16pt; font-weight: 800; min-height: 8mm; }
@@ -149,19 +150,22 @@
   set("gc", [gcLine, nd].filter(Boolean).join("\n"));
   if (nd) document.getElementById("gc").classList.add("small");
 
-  // Ô thanh toán: tên trạng thái + số tiền cần thu.
+  // Ô thanh toán (IN HOA): gửi chành xe -> THU HỘ; khách đến lấy / tự vận chuyển -> CẦN THU;
+  // Công nợ -> ĐÃ THANH TOÁN (nhà xe không thu).
   const tt = g("tt");
+  const cx = g("cx");
+  const tuLay = /khách đến lấy|tự vận chuyển/i.test(cx);
   const can = Math.max(0, num(g("tien")) - num(g("coc")));
   const thu = /thu hộ|cần thu/i.test(tt);
-  set("tt", thu ? "Thu hộ" : tt);
+  const daTra = /đã thanh toán|công nợ/i.test(tt);
+  set("tt", thu ? (tuLay ? "Cần thu" : "Thu hộ") : daTra ? "Đã thanh toán" : tt);
   // Thu hộ: chỉ in số khi đơn có số tiền thật; chưa có thì để chỗ trống ghi tay, KHÔNG in 0 đ.
   if (thu) set("st", can > 0 ? fmt(can) : "………………… đ");
-  else if (/đã thanh toán/i.test(tt)) set("st", fmt(0));
+  else if (daTra) set("st", fmt(0));
 
   // Tiền xe + chành xe.
   const tc = g("tc");
   set("cuoc", /shop/i.test(tc) ? "Tiền xe shop trả" : /khách/i.test(tc) ? "Tiền xe khách trả" : tc);
-  const cx = g("cx");
   const xe = document.getElementById("xe");
   if (cx && !/khách đến lấy|tự vận chuyển/i.test(cx)) {
     const s = document.createElement("span"); s.textContent = cx;
