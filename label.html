@@ -102,13 +102,13 @@
   const ma = g("ma");
   if (ma) {
     document.title = "Nhãn " + ma;
-    // Mã ngắn 6 ký tự dưới QR và trong QR: bỏ tiền tố "PDH", đệm số 0 (PDH00030 -> 000030).
+    // Chữ in: mã ngắn 6 ký tự, bỏ "PDH" (PDH00030 -> 000030). QR vẫn chứa mã đầy đủ để quét ra search trong Base.
     const ngan = ma.replace(/^PDH-?/i, "");
     const ma6 = /^\d+$/.test(ngan) ? ngan.padStart(6, "0") : ngan.slice(-6);
     set("ma", ma6);
     set("code", ma6);
     try {
-      const qr = qrcode(0, "M"); qr.addData(ma6); qr.make();
+      const qr = qrcode(0, "M"); qr.addData(ma); qr.make();
       document.getElementById("qr").src = qr.createDataURL(8, 0);
     } catch (e) { console.error("QR", e); }
   }
