@@ -32,6 +32,9 @@
   .many td { height: 5mm; font-size: 8.5pt; }
   /* Như mẫu Sheet: các dòng cách đều nhau, riêng dòng kẻ cuối cao gấp đôi. */
   tr.dbl td { height: 13mm; }
+  /* Như mẫu Sheet (hàng 15-17): ô Ghi chú luôn cao 3 dòng, chữ bắt đầu từ trên. */
+  .row.gcrow { align-items: start; }
+  .row.gcrow .val { min-height: 19.5mm; }
   .nd { white-space: pre-wrap; padding-top: 1.5mm; }
   .grow { flex: 1; }
   .row { margin: 1.2mm 0; display: grid; grid-template-columns: 24mm 1fr; align-items: baseline; }
@@ -72,7 +75,7 @@
       <div class="nd" id="nd"></div>
       <div class="grow"></div>
       <div class="row"><b>Tổng cộng:</b> <span class="val big" id="tong"></span></div>
-      <div class="row"><b>Ghi chú:</b> <span class="val big" id="gc"></span></div>
+      <div class="row gcrow"><b>Ghi chú:</b> <span class="val big" id="gc"></span></div>
       <div class="row"><b>Ngày lập:</b> <span class="val" id="nl"></span></div>
     </div>
     <div class="right">
