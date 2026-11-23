@@ -21,7 +21,7 @@
   .qr img { width: 25.9mm; height: 25.9mm; image-rendering: pixelated; display: block; }
   .mono { font-family: "Google Sans Code", ui-monospace, Menlo, Consolas, monospace; font-weight: 700; }
   .qr .ma { font-size: 18pt; line-height: 1.1; margin-top: .8mm; }
-  .cols { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; }
+  .cols { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .left { padding-right: 4mm; border-right: 1.5px solid #111; display: flex; flex-direction: column; min-height: 0; }
   .right { padding-left: 4mm; display: flex; flex-direction: column; min-height: 0; }
   table { width: 100%; border-collapse: collapse; }
@@ -37,7 +37,8 @@
   .nd { white-space: pre-wrap; padding-top: 1.5mm; }
   .grow { flex: 1; }
   .row { margin: 1.2mm 0; display: grid; grid-template-columns: 24mm 1fr; align-items: baseline; }
-  .right .row { grid-template-columns: 30mm 1fr; }
+  .right .row { grid-template-columns: 27mm 1fr; }
+  .row b { white-space: nowrap; }
   .right .row b { font-size: 12pt; }
   .row b { font-weight: 800; }
   .val { white-space: pre-wrap; word-break: break-word; }
@@ -47,7 +48,7 @@
   #gc.small { font-size: 10pt; font-weight: 400; line-height: 1.25; }
   .addr { font-size: 18pt; text-transform: uppercase; line-height: 1.2; }
   .box { border: 3px double #111; margin-top: auto; padding: 2mm; text-align: center; min-height: 26mm; display: flex; flex-direction: column; justify-content: center; }
-  .box .tt { font-size: 34pt; font-weight: 800; line-height: 1.1; text-transform: uppercase; }
+  .box .tt { font-size: 34pt; font-weight: 800; line-height: 1.1; text-transform: uppercase; white-space: nowrap; }
   #nn { text-transform: uppercase; }
   .box .st { font-size: 20pt; font-weight: 800; margin-top: 1mm; }
   .cuoc { font-weight: 600; font-size: 15pt; margin: 2mm 0 1mm; min-height: 5mm; }
@@ -177,8 +178,25 @@
     xe.append("Gửi xe ", s);
   } else set("xe", cx);
   if (!ma) document.getElementById("sheet").innerHTML = '<div class="empty">Không có dữ liệu đơn. Mở trang này từ nút “In đơn hàng” trong Lark Base.</div>';
+  // Co chữ cho vừa ô (không để chữ tràn/đè viền): chữ THU HỘ / ĐÃ THANH TOÁN luôn 1 dòng,
+  // địa chỉ dài thì nhỏ dần cho đến khi cột phải vừa trang. Cỡ gốc = cỡ trong Google Sheet.
+  const fit = () => {
+    const shrink = (el, ok, min) => {
+      let pt = parseFloat(getComputedStyle(el).fontSize) * 0.75;
+      while (!ok() && pt > min) { pt -= 1; el.style.fontSize = pt + "pt"; }
+    };
+    const ttEl = document.getElementById("tt");
+    if (ttEl) shrink(ttEl, () => ttEl.scrollWidth <= ttEl.clientWidth, 16);
+    const right = document.querySelector(".right");
+    const fits = () => right.scrollHeight <= right.clientHeight + 1;
+    const dcEl = document.getElementById("dc");
+    if (right && dcEl) shrink(dcEl, fits, 11);
+    const nnEl = document.getElementById("nn");
+    if (right && nnEl) shrink(nnEl, fits, 12);
+  };
+  const ready = (document.fonts ? document.fonts.ready : Promise.resolve()).then(fit);
   document.getElementById("print").addEventListener("click", () => window.print());
-  if (p.get("auto") === "1") window.addEventListener("load", () => setTimeout(() => window.print(), 400));
+  if (p.get("auto") === "1") window.addEventListener("load", () => ready.then(() => setTimeout(() => window.print(), 400)));
 </script>
 </body>
 </html>
