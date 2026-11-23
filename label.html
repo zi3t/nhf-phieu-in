@@ -30,6 +30,9 @@
   th:last-child, td:last-child { text-align: right; width: 18mm; }
   td { height: 7mm; padding: 0 1mm 0 0; border-bottom: 1px solid #111; font-variant-numeric: tabular-nums; vertical-align: middle; }
   .many td { height: 5mm; font-size: 8.5pt; }
+  /* Như mẫu Sheet: các dòng kẻ trải đều xuống sát "Tổng cộng", không để khoảng trống. */
+  .left.fill #tbl { flex: 1 1 auto; margin-bottom: 3mm; }
+  .left.fill .grow { display: none; }
   .nd { white-space: pre-wrap; padding-top: 1.5mm; }
   .grow { flex: 1; }
   .row { margin: 1.2mm 0; display: grid; grid-template-columns: 24mm 1fr; align-items: baseline; }
@@ -131,6 +134,7 @@
   // còn "Nội dung đơn hàng" in nguyên văn ở Ghi chú.
   const coDong = count > 0;
   if (count > 7) document.getElementById("tbl").classList.add("many");
+  if (coDong) document.querySelector(".left").classList.add("fill");
   for (let k = count; k < (coDong ? 7 : 3); k++) addRow("", "");
 
   // Tổng cộng (kg): chỉ lấy từ số liệu thật: Trọng lượng các dòng, rồi Trọng lượng của phiếu,
