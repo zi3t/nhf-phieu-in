@@ -28,12 +28,10 @@
   table { width: 100%; border-collapse: collapse; }
   th { text-align: left; font-weight: 800; padding: 1mm 0; border-bottom: 1.5px solid #111; }
   th:last-child, td:last-child { text-align: right; width: 18mm; }
-  td { height: 7mm; padding: 0 1mm 0 0; border-bottom: 1px solid #111; font-variant-numeric: tabular-nums; vertical-align: middle; }
+  td { height: 6.5mm; padding: 0 1mm 0 0; border-bottom: 1px solid #111; font-variant-numeric: tabular-nums; vertical-align: middle; }
   .many td { height: 5mm; font-size: 8.5pt; }
-  /* Như mẫu Sheet: các dòng kẻ trải đều xuống sát "Tổng cộng", không để khoảng trống. */
-  .left.fill #tbl { flex: 1 1 auto; margin-bottom: 3mm; }
-  .left.fill .grow { display: none; }
-  .left.fill td { height: 5mm; }
+  /* Như mẫu Sheet: các dòng cách đều nhau, riêng dòng kẻ cuối cao gấp đôi. */
+  tr.dbl td { height: 13mm; }
   .nd { white-space: pre-wrap; padding-top: 1.5mm; }
   .grow { flex: 1; }
   .row { margin: 1.2mm 0; display: grid; grid-template-columns: 24mm 1fr; align-items: baseline; }
@@ -135,8 +133,8 @@
   // còn "Nội dung đơn hàng" in nguyên văn ở Ghi chú.
   const coDong = count > 0;
   if (count > 7) document.getElementById("tbl").classList.add("many");
-  document.querySelector(".left").classList.add("fill");
   for (let k = count; k < 7; k++) addRow("", "");
+  if (count < 7) tbody.lastElementChild.classList.add("dbl");
 
   // Tổng cộng (kg): chỉ lấy từ số liệu thật: Trọng lượng các dòng, rồi Trọng lượng của phiếu,
   // rồi tổng số lượng các dòng (số lượng tính theo kg như mẫu cũ). Không có thì để trống.
