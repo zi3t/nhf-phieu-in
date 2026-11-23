@@ -56,6 +56,10 @@
   .xe span { text-transform: uppercase; }
   .code { text-align: right; font-size: 12pt; margin-top: 1mm; font-weight: 400; }
   .empty { padding: 30mm 0; text-align: center; color: #a00; }
+  .thieu { margin: 20mm auto; max-width: 150mm; border: 3px solid #c00; border-radius: 8px; padding: 8mm 10mm; color: #a00; background: #fff5f5; }
+  .thieu h1 { font-size: 20pt; margin: 0 0 4mm; }
+  .thieu ul { font-size: 15pt; font-weight: 600; margin: 0 0 5mm; padding-left: 7mm; }
+  .thieu p { font-size: 12pt; color: #333; margin: 0; }
   @media print {
     html, body { background: #fff; }
     .bar { display: none; }
@@ -129,6 +133,7 @@
   let kgSum = 0;
   g("sp").split("|").map(s => s.trim()).filter(Boolean).forEach(line => {
     const [name, qty = "", kg = "", ...rest] = line.split("~");
+    if (!name.trim()) return; // dòng trống trong Danh sách hàng hóa (chưa chọn sản phẩm) -> bỏ qua
     const note = rest.join("~").trim();
     const q = qty.trim();
     if (q !== "" && Number.isFinite(Number(q))) total += Number(q);
@@ -177,6 +182,22 @@
     const s = document.createElement("span"); s.textContent = cx;
     xe.append("Gửi xe ", s);
   } else set("xe", cx);
+  // Chặn in khi đơn chưa điền đủ (yêu cầu của Đạt): Chành xe, Người trả cước, ít nhất 1 dòng hàng hóa.
+  const thieu = [];
+  if (!coDong) thieu.push("sản phẩm trong Danh sách hàng hóa");
+  if (!cx) thieu.push("Chành xe");
+  if (!tc) thieu.push("Người trả cước");
+  if (ma && thieu.length) {
+    const box = document.createElement("div"); box.className = "thieu";
+    const h = document.createElement("h1"); h.textContent = "Đơn " + (document.getElementById("ma").textContent || ma) + " chưa điền đủ, chưa in được";
+    const ul = document.createElement("ul");
+    thieu.forEach(t => { const li = document.createElement("li"); li.textContent = "Thiếu " + t; ul.append(li); });
+    const pp = document.createElement("p"); pp.textContent = "Quay lại Lark Base điền đủ các mục trên, rồi bấm “In đơn hàng” lại.";
+    box.append(h, ul, pp);
+    document.getElementById("sheet").replaceWith(box);
+    document.querySelector(".bar").remove();
+    document.title = "Chưa in được " + ma;
+  }
   if (!ma) document.getElementById("sheet").innerHTML = '<div class="empty">Không có dữ liệu đơn. Mở trang này từ nút “In đơn hàng” trong Lark Base.</div>';
   // Co chữ cho vừa ô (không để chữ tràn/đè viền): chữ THU HỘ / ĐÃ THANH TOÁN luôn 1 dòng,
   // địa chỉ dài thì nhỏ dần cho đến khi cột phải vừa trang. Cỡ gốc = cỡ trong Google Sheet.
@@ -195,8 +216,9 @@
     if (right && nnEl) shrink(nnEl, fits, 12);
   };
   const ready = (document.fonts ? document.fonts.ready : Promise.resolve()).then(fit);
-  document.getElementById("print").addEventListener("click", () => window.print());
-  if (p.get("auto") === "1") window.addEventListener("load", () => ready.then(() => setTimeout(() => window.print(), 400)));
+  const btn = document.getElementById("print");
+  if (btn) btn.addEventListener("click", () => window.print());
+  if (p.get("auto") === "1" && !thieu.length) window.addEventListener("load", () => ready.then(() => setTimeout(() => window.print(), 400)));
 </script>
 </body>
 </html>
