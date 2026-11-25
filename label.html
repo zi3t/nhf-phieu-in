@@ -185,7 +185,7 @@
   const thieu = [];
   if (!coDong) thieu.push("sản phẩm trong Danh sách hàng hóa");
   if (!cx) thieu.push("Chành xe");
-  if (!tc) thieu.push("Người trả cước");
+  if (!tc && !/lấy/i.test(cx)) thieu.push("Người trả cước"); // khách ghé lấy: không cần
   if (ma && thieu.length) {
     const box = document.createElement("div"); box.className = "thieu";
     const h = document.createElement("h1"); h.textContent = "Đơn " + (document.getElementById("ma").textContent || ma) + " chưa điền đủ thông tin yêu cầu";
